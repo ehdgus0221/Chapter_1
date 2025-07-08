@@ -2,6 +2,8 @@ package io.hhplus.tdd.point;
 
 import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
+import io.hhplus.tdd.exception.MaxChargeAmountException;
+import io.hhplus.tdd.exception.MinChargeAmountException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,12 +13,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PointService {
 
+
     private final UserPointTable userPointTable;
     private final PointHistoryTable pointHistoryTable;
 
     public UserPoint charge(long userId, long chargeAmount) {
         if (chargeAmount < 0) {
             throw new IllegalArgumentException("충전 금액은 음수일 수 없습니다");
+        }
+        if (chargeAmount < 100) {
+            throw new MinChargeAmountException();
+        }
+        if (chargeAmount > 1000000) {
+            throw new MaxChargeAmountException();
         }
 
         UserPoint current = userPointTable.selectById(userId);

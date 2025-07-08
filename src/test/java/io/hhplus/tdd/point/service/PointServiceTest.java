@@ -2,6 +2,8 @@ package io.hhplus.tdd.point.service;
 
 import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
+import io.hhplus.tdd.exception.MaxChargeAmountException;
+import io.hhplus.tdd.exception.MinChargeAmountException;
 import io.hhplus.tdd.point.PointService;
 import io.hhplus.tdd.point.PointHistory;
 import io.hhplus.tdd.point.TransactionType;
@@ -105,6 +107,28 @@ class PointServiceTest {
         assertThatThrownBy(() -> pointService.charge(userId, invalidChargeAmount))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("음수");
+    }
+
+    @Test
+    void 충전_금액이_최소_제한_미만이면_예외가_발생한다() {
+        // given
+        long userId = 1L;
+        long chargeAmount = 50L;  // 최소 제한 100원 미만
+
+        // when & then
+        assertThatThrownBy(() -> pointService.charge(userId, chargeAmount))
+                .isInstanceOf(MinChargeAmountException.class);
+    }
+
+    @Test
+    void 충전_금액이_최대_제한_초과하면_예외가_발생한다() {
+        // given
+        long userId = 1L;
+        long chargeAmount = 1_000_001L;  // 최대 제한 1,000,000원 초과
+
+        // when & then
+        assertThatThrownBy(() -> pointService.charge(userId, chargeAmount))
+                .isInstanceOf(MaxChargeAmountException.class);
     }
 
     // === 포인트 사용 ===
