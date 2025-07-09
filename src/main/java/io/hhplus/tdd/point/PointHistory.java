@@ -7,4 +7,9 @@ public record PointHistory(
         TransactionType type,
         long updateMillis
 ) {
+    public PointHistory {
+        if (amount < 0) {
+            throw new IllegalArgumentException("금액은 음수일 수 없습니다.");
+        }
+    }
 }

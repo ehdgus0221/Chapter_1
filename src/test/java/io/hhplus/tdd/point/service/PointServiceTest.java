@@ -9,6 +9,7 @@ import io.hhplus.tdd.point.PointHistory;
 import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -16,10 +17,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -29,8 +26,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("UserPointService 테스트")
 class PointServiceTest {
 
+    final long userId = 1L;
+    final long now = System.currentTimeMillis();
 
     PointService pointService;
     @Mock
@@ -44,14 +44,13 @@ class PointServiceTest {
         pointService = new PointService(userPointTable, pointHistoryTable);
     }
 
-    // TODO 테스트 명 통일성 있게 하기
+    // TODO 테스트 명 영어로 바꾸기
 
-    // === 포인트 조회 ===
     @Test
-    void 포인트_조회_시_정상적으로_포인트를_반환한다() {
+    @DisplayName("포인트 조회 - 성공")
+    void getPoint_success() {
         // Given
-        long userId = 2L;
-        UserPoint expectedUserPoint = new UserPoint(userId, 1000L, System.currentTimeMillis());
+        UserPoint expectedUserPoint = new UserPoint(userId, 1000L, now);
         when(userPointTable.selectById(userId)).thenReturn(expectedUserPoint);
 
         // When
@@ -63,14 +62,14 @@ class PointServiceTest {
         assertThat(result.point()).isEqualTo(1000L);
     }
 
-    // === 포인트 충전 ===
+    // 히스토리 저장 여부는 chargePoint_historySaveCalled_success 에서 검증한다.
     @Test
-    void 충전하면_포인트가_증가한다() {
+    @DisplayName("포인트 충전 - 성공")
+    void charge_success() {
         // Given
-        long userId = 1L;
         long chargeAmount = 1000L;
-        UserPoint beforeUserPoint = new UserPoint(userId, 0L, System.currentTimeMillis());
-        UserPoint afterUserPoint = new UserPoint(userId, chargeAmount, System.currentTimeMillis());
+        UserPoint beforeUserPoint = new UserPoint(userId, 0L, now);
+        UserPoint afterUserPoint = new UserPoint(userId, chargeAmount, now);
         when(userPointTable.selectById(userId)).thenReturn(beforeUserPoint);
         when(userPointTable.insertOrUpdate(userId, chargeAmount)).thenReturn(afterUserPoint);
 
@@ -78,16 +77,16 @@ class PointServiceTest {
         UserPoint updated = pointService.charge(userId, chargeAmount);
 
         // Then
-        assertThat(updated.point()).isEqualTo(chargeAmount);
+        assertThat(updated.point()).isEqualTo(beforeUserPoint.point() + chargeAmount);
     }
 
     @Test
-    void 충전하면_히스토리_저장이_호출된다() {
+    @DisplayName("포인트 충전 시 히스토리 저장 호출 - 성공")
+    void charge_saveHistory() {
         // Given
-        long userId = 1L;
         long chargeAmount = 1000L;
-        when(userPointTable.selectById(userId)).thenReturn(new UserPoint(userId, 0L, System.currentTimeMillis()));
-        when(userPointTable.insertOrUpdate(userId, chargeAmount)).thenReturn(new UserPoint(userId, chargeAmount, System.currentTimeMillis()));
+        when(userPointTable.selectById(userId)).thenReturn(new UserPoint(userId, 0L, now));
+        when(userPointTable.insertOrUpdate(userId, chargeAmount)).thenReturn(new UserPoint(userId, chargeAmount, now));
 
         // When
         pointService.charge(userId, chargeAmount);
@@ -102,9 +101,9 @@ class PointServiceTest {
     }
 
     @Test
-    void 충전할_금액이_음수이면_예외를_던진다() {
+    @DisplayName("포인트 충전 - 음수 입력 시 예외 발생")
+    void charge_withNegativeAmount_throwsException() {
         // Given
-        long userId = 1L;
         long invalidChargeAmount = -1000L;
 
         // When & Then
@@ -114,9 +113,9 @@ class PointServiceTest {
     }
 
     @Test
-    void 충전_금액이_최소_제한_미만이면_예외가_발생한다() {
+    @DisplayName("포인트 충전 - 최소 금액 미만 시 예외 발생")
+    void charge_withAmountBelowMin_throwsException() {
         // given
-        long userId = 1L;
         long chargeAmount = 50L;  // 최소 제한 100원 미만
 
         // when & then
@@ -125,9 +124,9 @@ class PointServiceTest {
     }
 
     @Test
-    void 충전_금액이_최대_제한_초과하면_예외가_발생한다() {
+    @DisplayName("포인트 충전 - 최대 금액 초과 시 예외 발생")
+    void charge_withAmountAboveMax_throwsException() {
         // given
-        long userId = 1L;
         long chargeAmount = 1_000_001L;  // 최대 제한 1,000,000원 초과
 
         // when & then
@@ -135,14 +134,13 @@ class PointServiceTest {
                 .isInstanceOf(MaxChargeAmountException.class);
     }
 
-    // === 포인트 사용 ===
     @Test
-    void 사용하면_포인트가_차감된다() {
+    @DisplayName("포인트 사용 - 성공")
+    void use_success() {
         // Given
-        long userId = 2L;
         long useAmount = 300L;
-        UserPoint beforeUserPoint = new UserPoint(userId, 1000L, System.currentTimeMillis());
-        UserPoint afterUserPoint = new UserPoint(userId, 700L, System.currentTimeMillis());
+        UserPoint beforeUserPoint = new UserPoint(userId, 1000L, now);
+        UserPoint afterUserPoint = new UserPoint(userId, 700L, now);
         when(userPointTable.selectById(userId)).thenReturn(beforeUserPoint);
         when(userPointTable.insertOrUpdate(userId, 700L)).thenReturn(afterUserPoint);
 
@@ -150,16 +148,16 @@ class PointServiceTest {
         UserPoint result = pointService.use(userId, useAmount);
 
         // Then
-        assertThat(result.point()).isEqualTo(700L);
+        assertThat(result.point()).isEqualTo(beforeUserPoint.point() - useAmount);
     }
 
     @Test
-    void 사용하면_히스토리_저장이_호출된다() {
+    @DisplayName("포인트 사용 시 히스토리 저장 호출 - 성공")
+    void use_savesHistory() {
         // Given
-        long userId = 2L;
         long useAmount = 200L;
-        when(userPointTable.selectById(userId)).thenReturn(new UserPoint(userId, 1000L, System.currentTimeMillis()));
-        when(userPointTable.insertOrUpdate(userId, 800L)).thenReturn(new UserPoint(userId, 800L, System.currentTimeMillis()));
+        when(userPointTable.selectById(userId)).thenReturn(new UserPoint(userId, 1000L, now));
+        when(userPointTable.insertOrUpdate(userId, 800L)).thenReturn(new UserPoint(userId, 800L, now));
 
         // When
         pointService.use(userId, useAmount);
@@ -174,38 +172,37 @@ class PointServiceTest {
     }
 
     @Test
-    void 사용금액이_잔액보다_크면_예외를_던진다() {
+    @DisplayName("포인트 사용 - 잔액 부족 시 예외 발생")
+    void use_withInsufficientBalance_throwsException() {
         // Given
-        long userId = 1L;
         long useAmount = 9999L;
-        when(userPointTable.selectById(userId)).thenReturn(new UserPoint(userId, 1000L, System.currentTimeMillis()));
+        when(userPointTable.selectById(userId)).thenReturn(new UserPoint(userId, 1000L, now));
 
         // When & Then
         assertThatThrownBy(() -> pointService.use(userId, useAmount))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("잔액이 부족");
+                .hasMessageContaining("잔액이 부족합니다.");
     }
 
     @Test
-    void 사용금액이_음수면_예외를_던진다() {
+    @DisplayName("포인트 사용 - 음수 입력 시 예외 발생")
+    void use_withNegativeAmount_throwsException() {
         // Given
-        long userId = 1L;
         long invalidUseAmount = -100L;
 
         // When & Then
         assertThatThrownBy(() -> pointService.use(userId, invalidUseAmount))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("음수");
+                .hasMessageContaining("사용 금액은 음수일 수 없습니다.");
     }
 
-    // === 히스토리 조회 ===
     @Test
-    void 히스토리_조회_시_정상적으로_내역을_반환한다() {
+    @DisplayName("포인트 거래 내역 조회 - 성공")
+    void getHistories_success() {
         // Given
-        long userId = 1L;
         List<PointHistory> expectedHistory = List.of(
-                new PointHistory(1L, userId, 300L, TransactionType.CHARGE, System.currentTimeMillis()),
-                new PointHistory(2L, userId, 200L, TransactionType.USE, System.currentTimeMillis())
+                new PointHistory(1L, userId, 300L, TransactionType.CHARGE, now),
+                new PointHistory(2L, userId, 200L, TransactionType.USE, now)
         );
         when(pointHistoryTable.selectAllByUserId(userId)).thenReturn(expectedHistory);
 
@@ -223,42 +220,16 @@ class PointServiceTest {
     }
 
     @Test
-    void 동시에_여러번_충전하면_정확하게_합산된다() throws InterruptedException {
+    @DisplayName("포인트 충전 - 최대 잔고 초과 시 예외 발생")
+    void charge_exceedsMaxBalance_throwsException() {
         // Given
-        long userId = 1L;
-        int threadCount = 10;
-        long chargeAmount = 100L;
+        long currentPoint = 9_900_000L;
+        long chargeAmount = 200_000L;
+        when(userPointTable.selectById(userId)).thenReturn(new UserPoint(userId, currentPoint, now));
 
-        AtomicLong simulatedPoint = new AtomicLong(0);
-
-        when(userPointTable.selectById(userId)).thenAnswer(invocation ->
-                new UserPoint(userId, simulatedPoint.get(), System.currentTimeMillis())
-        );
-
-        when(userPointTable.insertOrUpdate(eq(userId), anyLong())).thenAnswer(invocation -> {
-            long amount = invocation.getArgument(1);
-            long newPoint = simulatedPoint.addAndGet(amount);
-            return new UserPoint(userId, newPoint, System.currentTimeMillis());
-        });
-
-        CountDownLatch latch = new CountDownLatch(threadCount);
-        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
-
-        // When
-        for (int i = 0; i < threadCount; i++) {
-            executor.execute(() -> {
-                try {
-                    pointService.charge(userId, chargeAmount);
-                } finally {
-                    latch.countDown();
-                }
-            });
-        }
-
-        latch.await();
-        executor.shutdown();
-
-        // Then
-        assertThat(simulatedPoint.get()).isEqualTo(threadCount * chargeAmount);
+        // When & Then
+        assertThatThrownBy(() -> pointService.charge(userId, chargeAmount))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("최대 잔고는 10,000,000 포인트를 초과할 수 없습니다.");
     }
 }

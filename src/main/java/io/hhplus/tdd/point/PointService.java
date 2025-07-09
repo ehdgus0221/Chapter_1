@@ -31,6 +31,10 @@ public class PointService {
         UserPoint current = userPointTable.selectById(userId);
         long updatedPoint = current.point() + chargeAmount;
 
+        if (updatedPoint > 10_000_000) {
+            throw new IllegalStateException("최대 잔고는 10,000,000 포인트를 초과할 수 없습니다.");
+        }
+
         // UserPoint 업데이트
         UserPoint updated = userPointTable.insertOrUpdate(userId, updatedPoint);
 
@@ -50,7 +54,7 @@ public class PointService {
 
     public UserPoint use(long userId, long useAmount) {
         if (useAmount < 0) {
-            throw new IllegalArgumentException("사용 금액은 음수일 수 없습니다");
+            throw new IllegalArgumentException("사용 금액은 음수일 수 없습니다.");
         }
 
         UserPoint current = userPointTable.selectById(userId);
