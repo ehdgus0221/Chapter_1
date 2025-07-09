@@ -16,6 +16,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -218,4 +222,43 @@ class PointServiceTest {
                 .containsExactly(300L, 200L);
     }
 
+    @Test
+    void 동시에_여러번_충전하면_정확하게_합산된다() throws InterruptedException {
+        // Given
+        long userId = 1L;
+        int threadCount = 10;
+        long chargeAmount = 100L;
+
+        AtomicLong simulatedPoint = new AtomicLong(0);
+
+        when(userPointTable.selectById(userId)).thenAnswer(invocation ->
+                new UserPoint(userId, simulatedPoint.get(), System.currentTimeMillis())
+        );
+
+        when(userPointTable.insertOrUpdate(eq(userId), anyLong())).thenAnswer(invocation -> {
+            long amount = invocation.getArgument(1);
+            long newPoint = simulatedPoint.addAndGet(amount);
+            return new UserPoint(userId, newPoint, System.currentTimeMillis());
+        });
+
+        CountDownLatch latch = new CountDownLatch(threadCount);
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+
+        // When
+        for (int i = 0; i < threadCount; i++) {
+            executor.execute(() -> {
+                try {
+                    pointService.charge(userId, chargeAmount);
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await();
+        executor.shutdown();
+
+        // Then
+        assertThat(simulatedPoint.get()).isEqualTo(threadCount * chargeAmount);
+    }
 }
