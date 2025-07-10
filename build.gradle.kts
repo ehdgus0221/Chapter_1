@@ -24,6 +24,7 @@ dependencyManagement {
 dependencies {
     implementation(libs.spring.boot.starter.web)
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    testImplementation("com.jayway.jsonpath:json-path:2.8.0")
     testImplementation(libs.h2)
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
