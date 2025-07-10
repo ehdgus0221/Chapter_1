@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 @WebMvcTest(PointController.class)
-@DisplayName("PointController 테스트")
+@DisplayName("PointController 단위 테스트")
 public class PointControllerTest {
 
     final long userId = 1L;

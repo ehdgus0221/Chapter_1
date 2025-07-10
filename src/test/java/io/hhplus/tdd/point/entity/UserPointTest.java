@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@DisplayName("UserPointTest")
+@DisplayName("UserPoint 단위 테스트")
 public class UserPointTest {
 
     final long userId = 1L;

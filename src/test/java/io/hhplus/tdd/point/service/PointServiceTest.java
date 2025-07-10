@@ -25,7 +25,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("UserPointService 테스트")
+@DisplayName("UserPointService 단위 테스트")
 class PointServiceTest {
 
     final long userId = 1L;
