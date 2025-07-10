@@ -29,14 +29,10 @@ public class PointService {
         }
 
         UserPoint current = userPointTable.selectById(userId);
-        long updatedPoint = current.point() + chargeAmount;
-
-        if (updatedPoint > 10_000_000) {
-            throw new IllegalStateException("최대 잔고는 10,000,000 포인트를 초과할 수 없습니다.");
-        }
+        UserPoint updated = current.add(chargeAmount);
 
         // UserPoint 업데이트
-        UserPoint updated = userPointTable.insertOrUpdate(userId, updatedPoint);
+       userPointTable.insertOrUpdate(userId, updated.point());
 
         // 충전 내역 기록
         pointHistoryTable.insert(userId, chargeAmount, TransactionType.CHARGE, System.currentTimeMillis());

@@ -22,8 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserPointService 테스트")
@@ -62,16 +61,16 @@ class PointServiceTest {
         assertThat(result.point()).isEqualTo(1000L);
     }
 
-    // 히스토리 저장 여부는 chargePoint_historySaveCalled_success 에서 검증한다.
+    // 히스토리 저장 여부는 charge_saveHistory_success 에서 검증한다.
     @Test
     @DisplayName("포인트 충전 - 성공")
     void charge_success() {
         // Given
         long chargeAmount = 1000L;
         UserPoint beforeUserPoint = new UserPoint(userId, 0L, now);
-        UserPoint afterUserPoint = new UserPoint(userId, chargeAmount, now);
+        UserPoint afterUserPoint = beforeUserPoint.add(chargeAmount);
         when(userPointTable.selectById(userId)).thenReturn(beforeUserPoint);
-        when(userPointTable.insertOrUpdate(userId, chargeAmount)).thenReturn(afterUserPoint);
+        when(userPointTable.insertOrUpdate(userId, afterUserPoint.point())).thenReturn(afterUserPoint);
 
         // When
         UserPoint updated = pointService.charge(userId, chargeAmount);
@@ -82,12 +81,14 @@ class PointServiceTest {
 
     @Test
     @DisplayName("포인트 충전 시 히스토리 저장 호출 - 성공")
-    void charge_saveHistory() {
+    void charge_saveHistory_success() {
         // Given
         long chargeAmount = 1000L;
-        when(userPointTable.selectById(userId)).thenReturn(new UserPoint(userId, 0L, now));
-        when(userPointTable.insertOrUpdate(userId, chargeAmount)).thenReturn(new UserPoint(userId, chargeAmount, now));
 
+        UserPoint beforeUserPoint = new UserPoint(userId, 0L, now);
+        UserPoint afterUserPoint = beforeUserPoint.add(chargeAmount);
+        when(userPointTable.selectById(userId)).thenReturn(beforeUserPoint);
+        when(userPointTable.insertOrUpdate(userId, afterUserPoint.point())).thenReturn(afterUserPoint);
         // When
         pointService.charge(userId, chargeAmount);
 
@@ -134,6 +135,7 @@ class PointServiceTest {
                 .isInstanceOf(MaxChargeAmountException.class);
     }
 
+    // 히스토리 저장 여부는 use_savesHistory_success 에서 검증한다.
     @Test
     @DisplayName("포인트 사용 - 성공")
     void use_success() {
@@ -153,7 +155,7 @@ class PointServiceTest {
 
     @Test
     @DisplayName("포인트 사용 시 히스토리 저장 호출 - 성공")
-    void use_savesHistory() {
+    void use_savesHistory_success() {
         // Given
         long useAmount = 200L;
         when(userPointTable.selectById(userId)).thenReturn(new UserPoint(userId, 1000L, now));
@@ -231,5 +233,7 @@ class PointServiceTest {
         assertThatThrownBy(() -> pointService.charge(userId, chargeAmount))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("최대 잔고는 10,000,000 포인트를 초과할 수 없습니다.");
+        // userPointTable.insertOrUpdate()가 호출되지 않음을 명시적으로 검증 (방어코드)
+        verify(userPointTable, never()).insertOrUpdate(anyLong(), anyLong());
     }
 }
