@@ -42,9 +42,6 @@ public class PointIntegrationTest {
     private static final long USER_ID = 1L;
 
     @Autowired
-    private JdbcTemplate jdbcTemplate;
-
-    @Autowired
     private UserPointTable userPointTable;
     @Autowired
     private PointHistoryTable pointHistoryTable;

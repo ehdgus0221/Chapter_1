@@ -67,6 +67,11 @@ public class PointService {
 
         synchronized (getLock(userId)) {
             UserPoint current = userPointTable.selectById(userId);
+
+            if (current.point() < useAmount) {
+                throw new IllegalStateException("잔액이 부족합니다.");
+            }
+
             UserPoint updated = current.subtract(useAmount);
 
             userPointTable.insertOrUpdate(userId, updated.point());
