@@ -5,28 +5,43 @@ public record UserPoint(
         long point,
         long updateMillis
 ) {
+    public static final long MAX_BALANCE = 10_000_000L;
+
     public UserPoint {
-        if (point < 0) {
-            throw new IllegalArgumentException("포인트는 음수일 수 없습니다.");
-        }
-        if (point > 10_000_000) {
-            throw new IllegalArgumentException("최대 잔고는 10,000,000 포인트 입니다.");
-        }
+        validatePoint(point);
     }
 
-    public UserPoint add(long amount) {
-        long newPoint = this.point + amount;
 
-        if (newPoint > 10_000_000) {
-            throw new IllegalStateException("최대 잔고는 10,000,000 포인트를 초과할 수 없습니다.");
+    public UserPoint add(long amount) {
+        if (amount < 0) {
+            throw new IllegalArgumentException("충전 금액은 음수일 수 없습니다.");
         }
+
+        long newPoint = this.point + amount;
+        validatePoint(newPoint);
 
         return new UserPoint(this.id, newPoint, System.currentTimeMillis());
     }
 
     public UserPoint subtract(long amount) {
-        if (amount > this.point) throw new IllegalStateException("잔액 부족");
-        return new UserPoint(id, this.point - amount, System.currentTimeMillis());
+        if (amount < 0) {
+            throw new IllegalArgumentException("사용 금액은 음수일 수 없습니다.");
+        }
+        if (amount > this.point) {
+            throw new IllegalStateException("잔액이 부족합니다.");
+        }
+
+        long newPoint = this.point - amount;
+        return new UserPoint(this.id, newPoint, System.currentTimeMillis());
+    }
+
+    private static void validatePoint(long point) {
+        if (point < 0) {
+            throw new IllegalArgumentException("포인트는 음수일 수 없습니다.");
+        }
+        if (point > MAX_BALANCE) {
+            throw new IllegalArgumentException("최대 잔고는 10,000,000 포인트 입니다.");
+        }
     }
 
     public static UserPoint empty(long id) {

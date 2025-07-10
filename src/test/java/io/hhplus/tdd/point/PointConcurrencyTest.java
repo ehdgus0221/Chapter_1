@@ -67,8 +67,8 @@ public class PointConcurrencyTest {
                 .andReturn();
 
         String content = result.getResponse().getContentAsString();
-        long finalPoint = JsonPath.read(content, "$.point");
 
-        assertThat(finalPoint).isEqualTo(chargeAmount * THREAD_COUNT);
+        UserPoint userPoint = objectMapper.readValue(content, UserPoint.class);
+        assertThat(userPoint.point()).isEqualTo(chargeAmount * THREAD_COUNT);
     }
 }

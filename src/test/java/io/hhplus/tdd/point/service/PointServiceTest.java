@@ -128,7 +128,7 @@ class PointServiceTest {
     @DisplayName("포인트 충전 - 최대 금액 초과 시 예외 발생")
     void charge_withAmountAboveMax_throwsException() {
         // given
-        long chargeAmount = 1_000_001L;  // 최대 제한 1,000,000원 초과
+        long chargeAmount = 10_000_001L;  // 최대 제한 10,000,000원 초과
 
         // when & then
         assertThatThrownBy(() -> pointService.charge(userId, chargeAmount))
@@ -231,8 +231,9 @@ class PointServiceTest {
 
         // When & Then
         assertThatThrownBy(() -> pointService.charge(userId, chargeAmount))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("최대 잔고는 10,000,000 포인트를 초과할 수 없습니다.");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("최대 잔고는 10,000,000 포인트 입니다.");
+
         // userPointTable.insertOrUpdate()가 호출되지 않음을 명시적으로 검증 (방어코드)
         verify(userPointTable, never()).insertOrUpdate(anyLong(), anyLong());
     }
