@@ -1,7 +1,7 @@
 package io.hhplus.tdd.point.database;
 
 import io.hhplus.tdd.database.UserPointTable;
-import io.hhplus.tdd.point.UserPoint;
+import io.hhplus.tdd.point.entity.UserPoint;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

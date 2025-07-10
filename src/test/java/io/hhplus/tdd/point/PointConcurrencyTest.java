@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.dto.PointRequest;
+import io.hhplus.tdd.point.entity.UserPoint;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -52,7 +53,7 @@ public class PointConcurrencyTest {
 
     @BeforeEach
     void clearInMemoryDatabase() throws Exception {
-        // 예: UserPointTable 의 내부 Map, PointHistoryTable 의 내부 List 등 클리어
+        // 테스트 독립성을 위한 메모리 초기화
         // 리플렉션으로 private 필드에 접근해 클리어 가능
         Field tableField1 = UserPointTable.class.getDeclaredField("table");
         tableField1.setAccessible(true);
@@ -135,7 +136,7 @@ public class PointConcurrencyTest {
 
         latch.await();
 
-        // Then: 잔액은 음수가 아니고, 일부 요청은 실패했어야 함
+        // 잔액은 음수가 아니고, 일부 요청은 실패해야 한다.
         MvcResult result = mockMvc.perform(get("/point/{id}", USER_ID))
                 .andExpect(status().isOk())
                 .andReturn();

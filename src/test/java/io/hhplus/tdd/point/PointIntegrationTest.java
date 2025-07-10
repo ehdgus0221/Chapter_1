@@ -11,9 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +47,7 @@ public class PointIntegrationTest {
     @BeforeEach
     void clearInMemoryDatabase() throws Exception {
         // 테스트 독립성을 위한 메모리 초기화
+        // 리플렉션으로 private 필드에 접근해 클리어 가능
         Field tableField1 = UserPointTable.class.getDeclaredField("table");
         tableField1.setAccessible(true);
         ((Map<?, ?>) tableField1.get(userPointTable)).clear();

@@ -1,8 +1,6 @@
 package io.hhplus.tdd.point.entity;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.hhplus.tdd.point.PointHistory;
-import io.hhplus.tdd.point.TransactionType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
