@@ -9,8 +9,8 @@ public record UserPoint(
         if (point < 0) {
             throw new IllegalArgumentException("포인트는 음수일 수 없습니다.");
         }
-        if (point > 1_000_000) {
-            throw new IllegalArgumentException("최대 잔고는 1,000,000 포인트 입니다.");
+        if (point > 10_000_000) {
+            throw new IllegalArgumentException("최대 잔고는 10,000,000 포인트 입니다.");
         }
     }
 

@@ -67,12 +67,12 @@ public class UserPointTest {
     @DisplayName("최대 잔고를 초과하여 UserPoint 생성 시 IllegalArgumentException 발생")
     void createUserPointWithExceedMaxPoint_ThrowsException() {
         // Given
-        long exceedMaxPoint = 1_000_001L; // 최대 잔고 초과
+        long exceedMaxPoint = 10_000_001L; // 최대 잔고 초과
 
         // When & Then
         assertThatThrownBy(() -> new UserPoint(userId, exceedMaxPoint, now))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("최대 잔고는 1,000,000 포인트 입니다.");
+                .hasMessage("최대 잔고는 10,000,000 포인트 입니다.");
     }
 
     @Test
