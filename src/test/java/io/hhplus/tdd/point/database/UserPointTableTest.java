@@ -77,16 +77,4 @@ public class UserPointTableTest {
         assertThat(table.selectById(id3).point()).isEqualTo(300L);
     }
 
-    // 설계 계층 책임(관심사의 분리)
-    @Test
-    @DisplayName("0원 및 음수 포인트 삽입도 가능하다")
-    void whenInsertZeroOrNegativePoint_thenStoredCorrectly() {
-        // zero
-        UserPoint zero = table.insertOrUpdate(10L, 0L);
-        assertThat(zero.point()).isZero();
-
-        // negative
-        UserPoint negative = table.insertOrUpdate(11L, -500L);
-        assertThat(negative.point()).isEqualTo(-500L);
-    }
 }

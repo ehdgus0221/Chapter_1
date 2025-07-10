@@ -1,5 +1,6 @@
 package io.hhplus.tdd.point;
 
+import io.hhplus.tdd.point.dto.PointRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,7 @@ public class PointController {
      */
     @GetMapping("{id}")
     public UserPoint point(
-            @PathVariable long id
+            @PathVariable("id") long id
     ) {
         return pointService.getPoint(id);
     }
@@ -32,7 +33,7 @@ public class PointController {
      */
     @GetMapping("{id}/histories")
     public List<PointHistory> history(
-            @PathVariable long id
+            @PathVariable("id") long id
     ) {
         return pointService.getHistories(id);
     }
@@ -43,10 +44,10 @@ public class PointController {
 
     @PatchMapping("{id}/charge")
     public UserPoint charge(
-            @PathVariable long id,
-            @RequestBody long amount
+            @PathVariable("id") long id,
+            @RequestBody PointRequest request
     ) {
-        return pointService.charge(id, amount);
+        return pointService.charge(id, request.getAmount());
     }
 
     /**
@@ -54,9 +55,9 @@ public class PointController {
      */
     @PatchMapping("{id}/use")
     public UserPoint use(
-            @PathVariable long id,
-            @RequestBody long amount
+            @PathVariable("id") long id,
+            @RequestBody PointRequest request
     ) {
-        return pointService.use(id, amount);
+        return pointService.use(id, request.getAmount());
     }
 }
